@@ -1,0 +1,12 @@
+# Large data files
+data/fineweb10B/
+
+# Byte-compiled
+__pycache__/
+*.py[cod]
+
+# Node
+node_modules/
+package-lock.json
+
+test_model_files/

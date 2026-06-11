@@ -1,0 +1,70 @@
+# =============================================================================
+# Muon 优化器 BCD 搜索配置
+# =============================================================================
+# 用法: python bcd_search.py --config configs/search_muon.yaml
+
+optimizer: muon
+
+# 基础参数（不参与搜索的固定参数）
+base_args:
+  model: 124m
+  seed: 42
+  sequence_length: 2048
+  device_batch_size: 16
+  chinchilla_multiplier: 1.0
+  val_loss_every: 125
+
+# 各超参数的初始默认值
+defaults:
+  muon_lr: 0.003
+  muon_momentum: 0.95
+  muon_weight_decay: 0.1
+  muon_eps: 1.0e-7
+  adamw_lr: 0.003
+  adamw_beta1: 0.9
+  adamw_beta2: 0.95
+  adamw_eps: 1.0e-8
+  adamw_weight_decay: 0.0
+  grad_clip: 1.0
+  batch_size: 512
+  warmup_fraction: 0.01
+  wsd_fraction: 0.2
+
+# 各超参数的搜索 grid
+hyperparams:
+  muon_lr: [0.0005, 0.001, 0.003, 0.005, 0.008]
+  muon_momentum: [0.9, 0.95, 0.98]
+  muon_weight_decay: [0.1, 0.0, 0.2]
+  muon_eps: [1.0e-7, 1.0e-14]
+  adamw_lr: [0.0005, 0.001, 0.003, 0.005, 0.008]
+  adamw_beta1: [0.9, 0.95, 0.98]
+  adamw_beta2: [0.9, 0.95, 0.98]
+  adamw_eps: [1.0e-8, 1.0e-16]
+  adamw_weight_decay: [0.1, 0.0, 0.2]
+  grad_clip: [0.0, 1.0, 2.0]
+  batch_size: [256, 512, 1024]
+  warmup_fraction: [0.01, 0.05, 0.10]
+  wsd_fraction: [0.2, 0.4, 0.6, 0.8, 1.0]
+
+# BCD 搜索顺序（先搜 lr 影响最大的参数）
+bcd_order:
+  - muon_lr
+  - adamw_lr
+  - muon_momentum
+  - muon_weight_decay
+  - muon_eps
+  - wsd_fraction
+  - grad_clip
+  - batch_size
+  - adamw_weight_decay
+  - adamw_beta1
+  - adamw_beta2
+  - warmup_fraction
+  - adamw_eps
+
+# 搜索控制
+max_rounds: 3
+convergence_threshold: 0.003
+launcher: single   # single=单机16卡, multi=多机
+nproc: 16
+output_dir: /models/share/chenyupeng/chenyupeng/pretraining_record/BCD_optimizer/muon

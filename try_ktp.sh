@@ -1,0 +1,11 @@
+ktp submit \
+    --name my-training \
+    --image 10.1.30.201:31443/user-1-chenyupeng/codeserver-mindspeed:v1.0.5 \
+    --framework PyTorch \
+    --command "cd /models/share/chenyupeng/chenyupeng/nanogpt_optimizer_and_where_to_find_them/modded-nanogpt_record4_muon_improvements && bash run3.sh" \
+    --cpu 64 \
+    --memory 256Gi \
+    --npu 16 \
+    --queue user-1-chenyupeng-compute \
+    --job-type vcjob \
+    --max-runtime 1440 \

@@ -1,0 +1,353 @@
+(llm_test) [root@codeserver-demo2-0 modded-nanogpt_record50_cautious_wd]# bash /mnt/host-model/chenyupeng/nanogpt_shipei/modded-nanogpt_record50_cautious_wd/run.sh
+W0522 03:24:57.122000 38015 site-packages/torch/distributed/run.py:852] 
+W0522 03:24:57.122000 38015 site-packages/torch/distributed/run.py:852] *****************************************
+W0522 03:24:57.122000 38015 site-packages/torch/distributed/run.py:852] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W0522 03:24:57.122000 38015 site-packages/torch/distributed/run.py:852] *****************************************
+/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/autograd/__init__.py:230: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:340.)
+  torch.ones_like(out, memory_format=torch.preserve_format)
+/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/autograd/__init__.py:230: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:340.)
+  torch.ones_like(out, memory_format=torch.preserve_format)
+/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/autograd/__init__.py:230: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:340.)
+  torch.ones_like(out, memory_format=torch.preserve_format)
+/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/autograd/__init__.py:230: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:340.)
+  torch.ones_like(out, memory_format=torch.preserve_format)
+/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/autograd/__init__.py:230: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:340.)
+  torch.ones_like(out, memory_format=torch.preserve_format)
+/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/autograd/__init__.py:230: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:340.)
+  torch.ones_like(out, memory_format=torch.preserve_format)
+/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/autograd/__init__.py:230: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:340.)
+  torch.ones_like(out, memory_format=torch.preserve_format)
+/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/autograd/__init__.py:230: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:340.)
+  torch.ones_like(out, memory_format=torch.preserve_format)
+/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/autograd/__init__.py:230: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:340.)
+  torch.ones_like(out, memory_format=torch.preserve_format)
+/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/autograd/__init__.py:230: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:340.)
+  torch.ones_like(out, memory_format=torch.preserve_format)
+/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/autograd/__init__.py:230: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:340.)
+  torch.ones_like(out, memory_format=torch.preserve_format)
+/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/autograd/__init__.py:230: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:340.)
+  torch.ones_like(out, memory_format=torch.preserve_format)
+/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/autograd/__init__.py:230: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:340.)
+  torch.ones_like(out, memory_format=torch.preserve_format)
+/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/autograd/__init__.py:230: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:340.)
+  torch.ones_like(out, memory_format=torch.preserve_format)
+/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/autograd/__init__.py:230: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:340.)
+  torch.ones_like(out, memory_format=torch.preserve_format)
+/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/autograd/__init__.py:230: UserWarning: Cannot create tensor with interal format while allow_internel_format=False, tensor will be created with base format. (Triggered internally at ../torch_npu/csrc/aten/common/TensorFactories.cpp:340.)
+  torch.ones_like(out, memory_format=torch.preserve_format)
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/mnt/host-model/chenyupeng/nanogpt_shipei/modded-nanogpt_record50_cautious_wd/train_gpt.py", line 849, in <module>
+[rank0]:     dist.barrier()
+[rank0]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+[rank0]:     return func(*args, **kwargs)
+[rank0]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py", line 4969, in barrier
+[rank0]:     work = group.barrier(opts=opts)
+[rank0]: RuntimeError: create_config:../torch_npu/csrc/distributed/HCCLUtils.cpp:140 HCCL function error: hcclCommInitRootInfoConfig(numRanks, &rootInfo, rank, config, &(comm->hcclComm_)), error code is 1 
+[rank0]: [ERROR] 2026-05-22-03:25:06 (PID:38104, Device:0, RankID:0) ERR02200 DIST call hccl api failed.
+
+[rank13]: Traceback (most recent call last):
+[rank13]:   File "/mnt/host-model/chenyupeng/nanogpt_shipei/modded-nanogpt_record50_cautious_wd/train_gpt.py", line 849, in <module>
+[rank13]:     dist.barrier()
+[rank13]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+[rank13]:     return func(*args, **kwargs)
+[rank13]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py", line 4969, in barrier
+[rank13]:     work = group.barrier(opts=opts)
+[rank13]: RuntimeError: create_config:../torch_npu/csrc/distributed/HCCLUtils.cpp:140 HCCL function error: hcclCommInitRootInfoConfig(numRanks, &rootInfo, rank, config, &(comm->hcclComm_)), error code is 1 
+[rank13]: [ERROR] 2026-05-22-03:25:06 (PID:38117, Device:13, RankID:13) ERR02200 DIST call hccl api failed.
+
+[rank9]: Traceback (most recent call last):
+[rank9]:   File "/mnt/host-model/chenyupeng/nanogpt_shipei/modded-nanogpt_record50_cautious_wd/train_gpt.py", line 849, in <module>
+[rank9]:     dist.barrier()
+[rank9]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+[rank9]:     return func(*args, **kwargs)
+[rank9]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py", line 4969, in barrier
+[rank9]:     work = group.barrier(opts=opts)
+[rank9]: RuntimeError: create_config:../torch_npu/csrc/distributed/HCCLUtils.cpp:140 HCCL function error: hcclCommInitRootInfoConfig(numRanks, &rootInfo, rank, config, &(comm->hcclComm_)), error code is 1 
+[rank9]: [ERROR] 2026-05-22-03:25:06 (PID:38113, Device:9, RankID:9) ERR02200 DIST call hccl api failed.
+
+[rank6]: Traceback (most recent call last):
+[rank6]:   File "/mnt/host-model/chenyupeng/nanogpt_shipei/modded-nanogpt_record50_cautious_wd/train_gpt.py", line 849, in <module>
+[rank6]:     dist.barrier()
+[rank6]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+[rank6]:     return func(*args, **kwargs)
+[rank6]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py", line 4969, in barrier
+[rank6]:     work = group.barrier(opts=opts)
+[rank6]: RuntimeError: create_config:../torch_npu/csrc/distributed/HCCLUtils.cpp:140 HCCL function error: hcclCommInitRootInfoConfig(numRanks, &rootInfo, rank, config, &(comm->hcclComm_)), error code is 1 
+[rank6]: [ERROR] 2026-05-22-03:25:07 (PID:38110, Device:6, RankID:6) ERR02200 DIST call hccl api failed.
+
+[rank14]: Traceback (most recent call last):
+[rank14]:   File "/mnt/host-model/chenyupeng/nanogpt_shipei/modded-nanogpt_record50_cautious_wd/train_gpt.py", line 849, in <module>
+[rank14]:     dist.barrier()
+[rank14]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+[rank14]:     return func(*args, **kwargs)
+[rank14]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py", line 4969, in barrier
+[rank14]:     work = group.barrier(opts=opts)
+[rank14]: RuntimeError: create_config:../torch_npu/csrc/distributed/HCCLUtils.cpp:140 HCCL function error: hcclCommInitRootInfoConfig(numRanks, &rootInfo, rank, config, &(comm->hcclComm_)), error code is 1 
+[rank14]: [ERROR] 2026-05-22-03:25:07 (PID:38118, Device:14, RankID:14) ERR02200 DIST call hccl api failed.
+
+[rank1]: Traceback (most recent call last):
+[rank1]:   File "/mnt/host-model/chenyupeng/nanogpt_shipei/modded-nanogpt_record50_cautious_wd/train_gpt.py", line 849, in <module>
+[rank1]:     dist.barrier()
+[rank1]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+[rank1]:     return func(*args, **kwargs)
+[rank1]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py", line 4969, in barrier
+[rank1]:     work = group.barrier(opts=opts)
+[rank1]: RuntimeError: create_config:../torch_npu/csrc/distributed/HCCLUtils.cpp:140 HCCL function error: hcclCommInitRootInfoConfig(numRanks, &rootInfo, rank, config, &(comm->hcclComm_)), error code is 1 
+[rank1]: [ERROR] 2026-05-22-03:25:07 (PID:38105, Device:1, RankID:1) ERR02200 DIST call hccl api failed.
+
+[rank4]: Traceback (most recent call last):
+[rank4]:   File "/mnt/host-model/chenyupeng/nanogpt_shipei/modded-nanogpt_record50_cautious_wd/train_gpt.py", line 849, in <module>
+[rank4]:     dist.barrier()
+[rank4]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+[rank4]:     return func(*args, **kwargs)
+[rank4]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py", line 4969, in barrier
+[rank4]:     work = group.barrier(opts=opts)
+[rank4]: RuntimeError: create_config:../torch_npu/csrc/distributed/HCCLUtils.cpp:140 HCCL function error: hcclCommInitRootInfoConfig(numRanks, &rootInfo, rank, config, &(comm->hcclComm_)), error code is 1 
+[rank4]: [ERROR] 2026-05-22-03:25:07 (PID:38108, Device:4, RankID:4) ERR02200 DIST call hccl api failed.
+
+[rank5]: Traceback (most recent call last):
+[rank5]:   File "/mnt/host-model/chenyupeng/nanogpt_shipei/modded-nanogpt_record50_cautious_wd/train_gpt.py", line 849, in <module>
+[rank5]:     dist.barrier()
+[rank5]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+[rank5]:     return func(*args, **kwargs)
+[rank5]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py", line 4969, in barrier
+[rank5]:     work = group.barrier(opts=opts)
+[rank5]: RuntimeError: create_config:../torch_npu/csrc/distributed/HCCLUtils.cpp:140 HCCL function error: hcclCommInitRootInfoConfig(numRanks, &rootInfo, rank, config, &(comm->hcclComm_)), error code is 1 
+[rank5]: [ERROR] 2026-05-22-03:25:07 (PID:38109, Device:5, RankID:5) ERR02200 DIST call hccl api failed.
+
+[rank7]: Traceback (most recent call last):
+[rank7]:   File "/mnt/host-model/chenyupeng/nanogpt_shipei/modded-nanogpt_record50_cautious_wd/train_gpt.py", line 849, in <module>
+[rank7]:     dist.barrier()
+[rank7]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+[rank7]:     return func(*args, **kwargs)
+[rank7]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py", line 4969, in barrier
+[rank7]:     work = group.barrier(opts=opts)
+[rank7]: RuntimeError: create_config:../torch_npu/csrc/distributed/HCCLUtils.cpp:140 HCCL function error: hcclCommInitRootInfoConfig(numRanks, &rootInfo, rank, config, &(comm->hcclComm_)), error code is 1 
+[rank7]: [ERROR] 2026-05-22-03:25:07 (PID:38111, Device:7, RankID:7) ERR02200 DIST call hccl api failed.
+
+[rank11]: Traceback (most recent call last):
+[rank11]:   File "/mnt/host-model/chenyupeng/nanogpt_shipei/modded-nanogpt_record50_cautious_wd/train_gpt.py", line 849, in <module>
+[rank11]:     dist.barrier()
+[rank11]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+[rank11]:     return func(*args, **kwargs)
+[rank11]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py", line 4969, in barrier
+[rank11]:     work = group.barrier(opts=opts)
+[rank11]: RuntimeError: create_config:../torch_npu/csrc/distributed/HCCLUtils.cpp:140 HCCL function error: hcclCommInitRootInfoConfig(numRanks, &rootInfo, rank, config, &(comm->hcclComm_)), error code is 1 
+[rank11]: [ERROR] 2026-05-22-03:25:07 (PID:38115, Device:11, RankID:11) ERR02200 DIST call hccl api failed.
+
+[rank8]: Traceback (most recent call last):
+[rank8]:   File "/mnt/host-model/chenyupeng/nanogpt_shipei/modded-nanogpt_record50_cautious_wd/train_gpt.py", line 849, in <module>
+[rank8]:     dist.barrier()
+[rank8]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+[rank8]:     return func(*args, **kwargs)
+[rank8]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py", line 4969, in barrier
+[rank8]:     work = group.barrier(opts=opts)
+[rank8]: RuntimeError: create_config:../torch_npu/csrc/distributed/HCCLUtils.cpp:140 HCCL function error: hcclCommInitRootInfoConfig(numRanks, &rootInfo, rank, config, &(comm->hcclComm_)), error code is 1 
+[rank8]: [ERROR] 2026-05-22-03:25:07 (PID:38112, Device:8, RankID:8) ERR02200 DIST call hccl api failed.
+
+[rank15]: Traceback (most recent call last):
+[rank15]:   File "/mnt/host-model/chenyupeng/nanogpt_shipei/modded-nanogpt_record50_cautious_wd/train_gpt.py", line 849, in <module>
+[rank15]:     dist.barrier()
+[rank15]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+[rank15]:     return func(*args, **kwargs)
+[rank15]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py", line 4969, in barrier
+[rank15]:     work = group.barrier(opts=opts)
+[rank15]: RuntimeError: create_config:../torch_npu/csrc/distributed/HCCLUtils.cpp:140 HCCL function error: hcclCommInitRootInfoConfig(numRanks, &rootInfo, rank, config, &(comm->hcclComm_)), error code is 1 
+[rank15]: [ERROR] 2026-05-22-03:25:07 (PID:38119, Device:15, RankID:15) ERR02200 DIST call hccl api failed.
+
+[rank12]: Traceback (most recent call last):
+[rank12]:   File "/mnt/host-model/chenyupeng/nanogpt_shipei/modded-nanogpt_record50_cautious_wd/train_gpt.py", line 849, in <module>
+[rank12]:     dist.barrier()
+[rank12]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+[rank12]:     return func(*args, **kwargs)
+[rank12]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py", line 4969, in barrier
+[rank12]:     work = group.barrier(opts=opts)
+[rank12]: RuntimeError: create_config:../torch_npu/csrc/distributed/HCCLUtils.cpp:140 HCCL function error: hcclCommInitRootInfoConfig(numRanks, &rootInfo, rank, config, &(comm->hcclComm_)), error code is 1 
+[rank12]: [ERROR] 2026-05-22-03:25:07 (PID:38116, Device:12, RankID:12) ERR02200 DIST call hccl api failed.
+
+[rank2]: Traceback (most recent call last):
+[rank2]:   File "/mnt/host-model/chenyupeng/nanogpt_shipei/modded-nanogpt_record50_cautious_wd/train_gpt.py", line 849, in <module>
+[rank2]:     dist.barrier()
+[rank2]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+[rank2]:     return func(*args, **kwargs)
+[rank2]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py", line 4969, in barrier
+[rank2]:     work = group.barrier(opts=opts)
+[rank2]: RuntimeError: create_config:../torch_npu/csrc/distributed/HCCLUtils.cpp:140 HCCL function error: hcclCommInitRootInfoConfig(numRanks, &rootInfo, rank, config, &(comm->hcclComm_)), error code is 1 
+[rank2]: [ERROR] 2026-05-22-03:25:07 (PID:38106, Device:2, RankID:2) ERR02200 DIST call hccl api failed.
+
+[rank10]: Traceback (most recent call last):
+[rank10]:   File "/mnt/host-model/chenyupeng/nanogpt_shipei/modded-nanogpt_record50_cautious_wd/train_gpt.py", line 849, in <module>
+[rank10]:     dist.barrier()
+[rank10]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+[rank10]:     return func(*args, **kwargs)
+[rank10]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py", line 4969, in barrier
+[rank10]:     work = group.barrier(opts=opts)
+[rank10]: RuntimeError: create_config:../torch_npu/csrc/distributed/HCCLUtils.cpp:140 HCCL function error: hcclCommInitRootInfoConfig(numRanks, &rootInfo, rank, config, &(comm->hcclComm_)), error code is 1 
+[rank10]: [ERROR] 2026-05-22-03:25:07 (PID:38114, Device:10, RankID:10) ERR02200 DIST call hccl api failed.
+
+[rank3]: Traceback (most recent call last):
+[rank3]:   File "/mnt/host-model/chenyupeng/nanogpt_shipei/modded-nanogpt_record50_cautious_wd/train_gpt.py", line 849, in <module>
+[rank3]:     dist.barrier()
+[rank3]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+[rank3]:     return func(*args, **kwargs)
+[rank3]:   File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/distributed_c10d.py", line 4969, in barrier
+[rank3]:     work = group.barrier(opts=opts)
+[rank3]: RuntimeError: create_config:../torch_npu/csrc/distributed/HCCLUtils.cpp:140 HCCL function error: hcclCommInitRootInfoConfig(numRanks, &rootInfo, rank, config, &(comm->hcclComm_)), error code is 1 
+[rank3]: [ERROR] 2026-05-22-03:25:07 (PID:38107, Device:3, RankID:3) ERR02200 DIST call hccl api failed.
+
+W0522 03:25:12.467000 38015 site-packages/torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 38105 closing signal SIGTERM
+W0522 03:25:12.468000 38015 site-packages/torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 38106 closing signal SIGTERM
+W0522 03:25:12.468000 38015 site-packages/torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 38107 closing signal SIGTERM
+W0522 03:25:12.468000 38015 site-packages/torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 38109 closing signal SIGTERM
+W0522 03:25:12.468000 38015 site-packages/torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 38110 closing signal SIGTERM
+W0522 03:25:12.468000 38015 site-packages/torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 38111 closing signal SIGTERM
+W0522 03:25:12.469000 38015 site-packages/torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 38112 closing signal SIGTERM
+W0522 03:25:12.469000 38015 site-packages/torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 38113 closing signal SIGTERM
+W0522 03:25:12.469000 38015 site-packages/torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 38114 closing signal SIGTERM
+W0522 03:25:12.469000 38015 site-packages/torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 38115 closing signal SIGTERM
+W0522 03:25:12.469000 38015 site-packages/torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 38116 closing signal SIGTERM
+W0522 03:25:12.470000 38015 site-packages/torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 38117 closing signal SIGTERM
+W0522 03:25:12.470000 38015 site-packages/torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 38118 closing signal SIGTERM
+W0522 03:25:12.470000 38015 site-packages/torch/distributed/elastic/multiprocessing/api.py:1010] Sending process 38119 closing signal SIGTERM
+E0522 03:25:13.137000 38015 site-packages/torch/distributed/elastic/multiprocessing/api.py:984] failed (exitcode: 1) local_rank: 0 (pid: 38104) of binary: /root/miniconda3/envs/llm_test/bin/python3.10
+Traceback (most recent call last):
+  File "/root/miniconda3/envs/llm_test/bin/torchrun", line 7, in <module>
+    sys.exit(main())
+  File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 362, in wrapper
+    return f(*args, **kwargs)
+  File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/run.py", line 991, in main
+    run(args)
+  File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/run.py", line 982, in run
+    elastic_launch(
+  File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 170, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+  File "/root/miniconda3/envs/llm_test/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 317, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+train_gpt.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-05-22_03:25:12
+  host      : codeserver-demo2-0.codeserver-demo2.user-1-chenyupeng-1464.svc.cluster.local
+  rank      : 4 (local_rank: 4)
+  exitcode  : 1 (pid: 38108)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[2]:
+  time      : 2026-05-22_03:25:13
+  host      : codeserver-demo2-0.codeserver-demo2.user-1-chenyupeng-1464.svc.cluster.local
+  rank      : 1 (local_rank: 1)
+  exitcode  : -15 (pid: 38105)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 38105
+[3]:
+  time      : 2026-05-22_03:25:13
+  host      : codeserver-demo2-0.codeserver-demo2.user-1-chenyupeng-1464.svc.cluster.local
+  rank      : 2 (local_rank: 2)
+  exitcode  : -15 (pid: 38106)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 38106
+[4]:
+  time      : 2026-05-22_03:25:13
+  host      : codeserver-demo2-0.codeserver-demo2.user-1-chenyupeng-1464.svc.cluster.local
+  rank      : 3 (local_rank: 3)
+  exitcode  : -15 (pid: 38107)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 38107
+[5]:
+  time      : 2026-05-22_03:25:13
+  host      : codeserver-demo2-0.codeserver-demo2.user-1-chenyupeng-1464.svc.cluster.local
+  rank      : 5 (local_rank: 5)
+  exitcode  : -15 (pid: 38109)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 38109
+[6]:
+  time      : 2026-05-22_03:25:13
+  host      : codeserver-demo2-0.codeserver-demo2.user-1-chenyupeng-1464.svc.cluster.local
+  rank      : 6 (local_rank: 6)
+  exitcode  : -15 (pid: 38110)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 38110
+[7]:
+  time      : 2026-05-22_03:25:13
+  host      : codeserver-demo2-0.codeserver-demo2.user-1-chenyupeng-1464.svc.cluster.local
+  rank      : 7 (local_rank: 7)
+  exitcode  : -15 (pid: 38111)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 38111
+[8]:
+  time      : 2026-05-22_03:25:13
+  host      : codeserver-demo2-0.codeserver-demo2.user-1-chenyupeng-1464.svc.cluster.local
+  rank      : 8 (local_rank: 8)
+  exitcode  : 1 (pid: 38112)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[9]:
+  time      : 2026-05-22_03:25:13
+  host      : codeserver-demo2-0.codeserver-demo2.user-1-chenyupeng-1464.svc.cluster.local
+  rank      : 9 (local_rank: 9)
+  exitcode  : -15 (pid: 38113)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 38113
+[10]:
+  time      : 2026-05-22_03:25:13
+  host      : codeserver-demo2-0.codeserver-demo2.user-1-chenyupeng-1464.svc.cluster.local
+  rank      : 10 (local_rank: 10)
+  exitcode  : 1 (pid: 38114)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[11]:
+  time      : 2026-05-22_03:25:13
+  host      : codeserver-demo2-0.codeserver-demo2.user-1-chenyupeng-1464.svc.cluster.local
+  rank      : 11 (local_rank: 11)
+  exitcode  : -15 (pid: 38115)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 38115
+[12]:
+  time      : 2026-05-22_03:25:13
+  host      : codeserver-demo2-0.codeserver-demo2.user-1-chenyupeng-1464.svc.cluster.local
+  rank      : 12 (local_rank: 12)
+  exitcode  : -15 (pid: 38116)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 38116
+[13]:
+  time      : 2026-05-22_03:25:13
+  host      : codeserver-demo2-0.codeserver-demo2.user-1-chenyupeng-1464.svc.cluster.local
+  rank      : 13 (local_rank: 13)
+  exitcode  : -15 (pid: 38117)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 38117
+[14]:
+  time      : 2026-05-22_03:25:13
+  host      : codeserver-demo2-0.codeserver-demo2.user-1-chenyupeng-1464.svc.cluster.local
+  rank      : 14 (local_rank: 14)
+  exitcode  : -15 (pid: 38118)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 38118
+[15]:
+  time      : 2026-05-22_03:25:13
+  host      : codeserver-demo2-0.codeserver-demo2.user-1-chenyupeng-1464.svc.cluster.local
+  rank      : 15 (local_rank: 15)
+  exitcode  : -15 (pid: 38119)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 38119
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-05-22_03:25:12
+  host      : codeserver-demo2-0.codeserver-demo2.user-1-chenyupeng-1464.svc.cluster.local
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 38104)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+[ERROR] 2026-05-22-03:25:13 (PID:38015, Device:-1, RankID:-1) ERR99999 UNKNOWN applicaiton exception
+(llm_test) [root@codeserver-demo2-0 modded-nanogpt_record50_cautious_wd]# 
+
+
+
+sk-6lkXQ1PjKFK8cQR_0yqdjPIyZhGiTasc1TdJ51cV1HD4qmhoFdwStBL3WBA

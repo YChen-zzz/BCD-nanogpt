@@ -1,0 +1,37 @@
+# AdamW BCD near-best config analysis.
+#
+# Usage:
+#   python analyze_near_best_configs.py --config configs/adamw/near_best_analysis.yaml
+
+optimizer: adamw
+threshold: 0.0064
+best_loss_source: bcd_history_min
+
+# Keep CSV columns stable and aligned with the AdamW BCD order.
+param_order:
+  - lr
+  - weight_decay
+  - wsd_fraction
+  - beta1
+  - beta2
+  - grad_clip
+  - batch_size
+  - warmup_fraction
+  - eps
+
+settings:
+  - name: 1c130m
+    search_config: 1c_130m/search_adamw.yaml
+  - name: 2c130m
+    search_config: 2c_130m/search_adamw.yaml
+  - name: 4c130m
+    search_config: 4c_130m/search_adamw.yaml
+  - name: 8c130m
+    search_config: 8c_130m/search_adamw.yaml
+  - name: 1c300m
+    search_config: 1c_300m/search_adamw.yaml
+  - name: 1c480m
+    search_config: 1c_480m/search_adamw.yaml
+
+output_dir: /models/share/chenyupeng/chenyupeng/pretraining_record/BCD_optimizer/adamw/analysis
+filename_prefix: near_best_configs
