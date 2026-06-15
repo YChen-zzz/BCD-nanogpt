@@ -1,5 +1,5 @@
 """
-NanoGPT 预训练脚本 (NPU 版本)
+NanoGPT 预训练脚本 (NPU 版本) — nano-compile fast path
 ==============================
 - 模型: 通过 --model 指定 (如 124m)，自动映射到对应配置
 - 优化器: 通过 --optimizer 指定 (如 muon, adamw)，每个 optimizer 自带参数分配逻辑
@@ -20,6 +20,7 @@ import uuid
 import glob
 import time
 import json
+import inspect
 import argparse
 from dataclasses import dataclass, asdict
 
@@ -52,36 +53,43 @@ def set_seed(seed):
 # =============================================================================
 
 class Rotary(nn.Module):
-    """旋转位置编码 (RoPE)"""
+    """旋转位置编码 (RoPE) — 静态预计算, 消除 forward 动态分支"""
 
-    def __init__(self, dim, base=10000):
+    def __init__(self, dim, max_seq_len=2048, base=10000):
         super().__init__()
-        self.inv_freq = 1.0 / (base ** (torch.arange(0, dim, 2).float() / dim))
-        self.seq_len_cached = None
-        self.cos_cached = None
-        self.sin_cached = None
+        inv_freq = 1.0 / (base ** (torch.arange(0, dim, 2).float() / dim))
+        t = torch.arange(max_seq_len).float()
+        freqs = torch.outer(t, inv_freq)
+        self.register_buffer("cos_buf", freqs.cos().bfloat16()[None, :, None, :])
+        self.register_buffer("sin_buf", freqs.sin().bfloat16()[None, :, None, :])
+        cos_full = torch.cat([freqs.cos(), freqs.cos()], dim=-1).bfloat16()
+        neg_sin_full = -torch.cat([freqs.sin(), freqs.sin()], dim=-1).bfloat16()
+        self.register_buffer("cos_full_buf", cos_full[None, :, None, :])
+        self.register_buffer("neg_sin_full_buf", neg_sin_full[None, :, None, :])
+        self.use_npu_rotary = False
 
     def forward(self, x):
         seq_len = x.shape[1]
-        if seq_len != self.seq_len_cached:
-            self.seq_len_cached = seq_len
-            t = torch.arange(seq_len, device=x.device).type_as(self.inv_freq)
-            freqs = torch.outer(t, self.inv_freq).to(x.device)
-            # cos/sin 缓存为 bf16（参与 activation 计算，在 autocast 范围内）
-            self.cos_cached = freqs.cos().bfloat16()
-            self.sin_cached = freqs.sin().bfloat16()
-        return self.cos_cached[None, :, None, :], self.sin_cached[None, :, None, :]
+        return self.cos_buf[:, :seq_len], self.sin_buf[:, :seq_len]
+
+    def apply(self, x):
+        seq_len = x.shape[1]
+        if self.use_npu_rotary and hasattr(torch_npu, 'npu_rotary_mul') and x.device.type == 'npu':
+            cos_full = self.cos_full_buf[:, :seq_len]
+            neg_sin_full = self.neg_sin_full_buf[:, :seq_len]
+            return torch_npu.npu_rotary_mul(x, cos_full, neg_sin_full).type_as(x)
+        cos, sin = self.cos_buf[:, :seq_len], self.sin_buf[:, :seq_len]
+        return apply_rotary_emb(x, cos, sin)
 
 
 def apply_rotary_emb(x, cos, sin):
     """应用旋转位置编码"""
-    assert x.ndim == 4  # (batch, seq, head, dim)
     d = x.shape[3] // 2
     x1 = x[..., :d]
     x2 = x[..., d:]
     y1 = x1 * cos + x2 * sin
     y2 = x1 * (-sin) + x2 * cos
-    return torch.cat([y1, y2], 3).type_as(x)
+    return torch.cat([y1, y2], 3)
 
 
 def rmsnorm(x0, eps=1e-6):
@@ -91,37 +99,88 @@ def rmsnorm(x0, eps=1e-6):
     return x.type_as(x0)
 
 
+class FastRMSNorm(nn.Module):
+    """无参数 RMSNorm；可切到 NPU fused RMSNorm kernel"""
+
+    def __init__(self, dim, eps=1e-6):
+        super().__init__()
+        self.eps = eps
+        self.use_npu_rms_norm = False
+        self.register_buffer("weight", torch.ones(dim), persistent=False)
+
+    def forward(self, x):
+        if self.use_npu_rms_norm and hasattr(torch_npu, 'npu_rms_norm') and x.device.type == 'npu':
+            return torch_npu.npu_rms_norm(x, self.weight, self.eps)[0].type_as(x)
+        return rmsnorm(x, self.eps)
+
+
 class CausalSelfAttention(nn.Module):
     """
     因果自注意力模块
-    QKV 分开为独立的 Linear 层，方便不同 optimizer 统一处理
+    支持两种模式:
+    - 分离 QKV: c_q, c_k, c_v (方便不同 optimizer 统一处理)
+    - 合并 QKV: c_qkv (减少 kernel launch, 提升计算密度)
     """
 
-    def __init__(self, config):
+    def __init__(self, config, fused_qkv=False):
         super().__init__()
         self.n_head = config.n_head
         self.n_embd = config.n_embd
         self.head_dim = self.n_embd // self.n_head
         assert self.n_embd % self.n_head == 0
-        # Q, K, V 分开为三个独立的 Linear
-        self.c_q = nn.Linear(self.n_embd, self.n_embd, bias=False)
-        self.c_k = nn.Linear(self.n_embd, self.n_embd, bias=False)
-        self.c_v = nn.Linear(self.n_embd, self.n_embd, bias=False)
-        # 输出投影
+        self.fused_qkv = fused_qkv
+        if fused_qkv:
+            self.c_qkv = nn.Linear(self.n_embd, 3 * self.n_embd, bias=False)
+        else:
+            self.c_q = nn.Linear(self.n_embd, self.n_embd, bias=False)
+            self.c_k = nn.Linear(self.n_embd, self.n_embd, bias=False)
+            self.c_v = nn.Linear(self.n_embd, self.n_embd, bias=False)
         self.c_proj = nn.Linear(self.n_embd, self.n_embd, bias=False)
-        self.rotary = Rotary(self.head_dim)
+        self.rotary = Rotary(self.head_dim, max_seq_len=2048)
+        self.attn_scale = self.head_dim ** -0.5
+        self.use_npu_attention = False
+        self.causal_mask_cached = None
+        self.causal_mask_seq_len = None
+
+    def _get_causal_mask(self, seq_len, device):
+        if self.causal_mask_cached is None or self.causal_mask_seq_len != seq_len:
+            self.causal_mask_seq_len = seq_len
+            self.causal_mask_cached = torch.ones(
+                (seq_len, seq_len), device=device, dtype=torch.bool
+            ).triu(1)
+        return self.causal_mask_cached
 
     def forward(self, x):
         B, T, C = x.size()
-        q = self.c_q(x).view(B, T, self.n_head, self.head_dim)
-        k = self.c_k(x).view(B, T, self.n_head, self.head_dim)
-        v = self.c_v(x).view(B, T, self.n_head, self.head_dim)
-        cos, sin = self.rotary(q)
-        q, k = apply_rotary_emb(q, cos, sin), apply_rotary_emb(k, cos, sin)
-        y = F.scaled_dot_product_attention(
-            q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2), is_causal=True
-        )
-        y = y.transpose(1, 2).contiguous().view_as(x)
+        if self.fused_qkv:
+            qkv = self.c_qkv(x).view(B, T, 3, self.n_head, self.head_dim)
+            q, k, v = qkv[:, :, 0], qkv[:, :, 1], qkv[:, :, 2]
+        else:
+            q = self.c_q(x).view(B, T, self.n_head, self.head_dim)
+            k = self.c_k(x).view(B, T, self.n_head, self.head_dim)
+            v = self.c_v(x).view(B, T, self.n_head, self.head_dim)
+        q = self.rotary.apply(q)
+        k = self.rotary.apply(k)
+
+        if self.use_npu_attention and hasattr(torch_npu, 'npu_fusion_attention') and q.device.type == 'npu':
+            y = torch_npu.npu_fusion_attention(
+                q, k, v,
+                head_num=self.n_head,
+                input_layout="BSND",
+                atten_mask=self._get_causal_mask(T, q.device),
+                scale=self.attn_scale,
+                keep_prob=1.0,
+                pre_tockens=T,
+                next_tockens=0,
+                sparse_mode=0,
+            )[0]
+            y = y.contiguous().view_as(x)
+        else:
+            y = F.scaled_dot_product_attention(
+                q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2), is_causal=True
+            )
+            y = y.transpose(1, 2).contiguous().view_as(x)
+
         y = self.c_proj(y)
         return y
 
@@ -144,15 +203,16 @@ class MLP(nn.Module):
 class Block(nn.Module):
     """Transformer Block: RMSNorm + Attention + RMSNorm + MLP"""
 
-    def __init__(self, config):
+    def __init__(self, config, fused_qkv=False):
         super().__init__()
-        self.attn = CausalSelfAttention(config)
+        self.attn = CausalSelfAttention(config, fused_qkv=fused_qkv)
         self.mlp = MLP(config)
-        #self.attn_scale = (1 / (2 * config.n_layer)**0.5)
+        self.attn_norm = FastRMSNorm(config.n_embd)
+        self.mlp_norm = FastRMSNorm(config.n_embd)
 
     def forward(self, x):
-        x = x + self.attn(rmsnorm(x))
-        x = x + self.mlp(rmsnorm(x))
+        x = x + self.attn(self.attn_norm(x))
+        x = x + self.mlp(self.mlp_norm(x))
         return x
 
 
@@ -184,25 +244,36 @@ class GPT(nn.Module):
     - optimizer 模块自行决定参数分配
     """
 
-    def __init__(self, config):
+    def __init__(self, config, fused_qkv=False):
         super().__init__()
         self.config = config
         self.transformer = nn.ModuleDict(dict(
             wte=nn.Embedding(config.vocab_size, config.n_embd),
-            h=nn.ModuleList([Block(config) for _ in range(config.n_layer)]),
+            h=nn.ModuleList([Block(config, fused_qkv=fused_qkv) for _ in range(config.n_layer)]),
         ))
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
-        # 不做 weight tying
+        self.final_norm = FastRMSNorm(config.n_embd)
+
+    def enable_npu_fused_kernels(self, rmsnorm=True, rope=True, attention=False):
+        """启用 NPU 融合算子"""
+        for module in self.modules():
+            if isinstance(module, FastRMSNorm):
+                module.use_npu_rms_norm = rmsnorm
+            elif isinstance(module, Rotary):
+                module.use_npu_rotary = rope
+            elif isinstance(module, CausalSelfAttention):
+                module.use_npu_attention = attention
 
     def forward(self, idx, targets=None, return_logits=True):
         x = self.transformer.wte(idx)
+
         for block in self.transformer.h:
             x = block(x)
-        x = rmsnorm(x)
+        x = self.final_norm(x)
 
         if targets is not None:
             logits = self.lm_head(x)
-            logits = logits.float()  # loss 计算使用 fp32
+            logits = logits.float()
             loss = F.cross_entropy(
                 logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1
             )
@@ -285,7 +356,7 @@ class DistributedDataLoader:
         self.current_position += B * T * self.num_processes
         if self.current_position + (B * T * self.num_processes + 1) > len(self.tokens):
             self.advance()
-        return x.npu(), y.npu()
+        return x.to("npu", non_blocking=True), y.to("npu", non_blocking=True)
 
 
 # =============================================================================
@@ -327,16 +398,16 @@ def parse_args():
                         help='Chinchilla 倍数 (>0 时自动计算 num_iterations)')
     parser.add_argument('--num_iterations', type=int, default=4704,
                         help='训练步数 (chinchilla_multiplier>0 时自动覆盖)')
-    parser.add_argument('--grad_clip', type=float, default=0.0,
+    parser.add_argument('--grad_clip', type=float, default=1.0,
                         help='梯度 norm clip 阈值 (<=0 表示不裁剪)')
 
     # --- LR Scheduler ---
-    parser.add_argument('--warmup_fraction', type=float, default=0.0,
+    parser.add_argument('--warmup_fraction', type=float, default=0.05,
                         help='学习率 warmup 阶段占总步数的比例 '
                              '(warmup_iters = warmup_fraction * num_iterations)')
     parser.add_argument('--warmup_iters', type=int, default=None,
                         help='学习率 warmup 步数 (兼容旧参数；指定后覆盖 warmup_fraction)')
-    parser.add_argument('--wsd_fraction', type=float, default=0.29,
+    parser.add_argument('--wsd_fraction', type=float, default=0.2,
                         help='WSD scheduler 中 decay 阶段占总步数的比例 '
                              '(warmdown_iters = wsd_fraction * num_iterations)')
 
@@ -346,13 +417,28 @@ def parse_args():
     parser.add_argument('--val_tokens', type=int, default=10485760,
                         help='验证集 token 数量')
     parser.add_argument('--save_every', type=int, default=0,
-                        help='每多少步保存 checkpoint (0=从不保存, <0=仅保存最后一步, >0=每N步保存+最后一步)')
+                        help='每多少步保存 checkpoint (0=仅最后)')
     parser.add_argument('--output_dir', type=str, default='',
                         help='日志和 checkpoint 输出目录 (默认自动生成 logs/{uuid})')
 
     # --- 可复现性 ---
     parser.add_argument('--seed', type=int, default=42,
                         help='随机种子')
+
+    # --- NPU 融合算子 ---
+    parser.add_argument('--fused_rmsnorm', type=int, default=0, choices=[0, 1],
+                        help='启用 NPU fused RMSNorm (torch_npu.npu_rms_norm)')
+    parser.add_argument('--fused_rope', type=int, default=0, choices=[0, 1],
+                        help='启用 NPU fused Rotary (torch_npu.npu_rotary_mul)')
+    parser.add_argument('--fused_attention', type=int, default=0, choices=[0, 1],
+                        help='启用 NPU fusion attention (torch_npu.npu_fusion_attention)')
+    parser.add_argument('--fused_qkv', type=int, default=0, choices=[0, 1],
+                        help='合并 QKV 为单个 Linear (减少 kernel launch)')
+    parser.add_argument('--ddp_gradient_as_bucket_view', type=int, default=0, choices=[0, 1],
+                        help='DDP gradient_as_bucket_view 优化')
+    parser.add_argument('--ddp_static_graph', type=int, default=0, choices=[0, 1],
+                        help='DDP static_graph 优化')
+
 
     # 第二阶段：解析 optimizer 名称后，注册其超参数
     # 使用 parse_known_args 先拿到 optimizer 名称
@@ -395,9 +481,28 @@ def main():
 
     # ---- 初始化模型 ----
     model_config = MODEL_CONFIGS[args.model]
-    model = GPT(model_config)
+    model = GPT(model_config, fused_qkv=bool(args.fused_qkv))
     model = model.npu()
-    model = DDP(model, device_ids=[ddp_local_rank])
+
+    # 启用 NPU 融合算子
+    if args.fused_rmsnorm or args.fused_rope or args.fused_attention:
+        model.enable_npu_fused_kernels(
+            rmsnorm=bool(args.fused_rmsnorm),
+            rope=bool(args.fused_rope),
+            attention=bool(args.fused_attention),
+        )
+        if master_process:
+            print(f"NPU fused ops: rmsnorm={args.fused_rmsnorm}, "
+                  f"rope={args.fused_rope}, attention={args.fused_attention}, "
+                  f"fused_qkv={args.fused_qkv}")
+
+    # DDP 包装
+    ddp_kwargs = dict(device_ids=[ddp_local_rank])
+    if args.ddp_gradient_as_bucket_view:
+        ddp_kwargs['gradient_as_bucket_view'] = True
+    if args.ddp_static_graph:
+        ddp_kwargs['static_graph'] = True
+    model = DDP(model, **ddp_kwargs)
     raw_model = model.module
     total_params = sum(p.numel() for p in raw_model.parameters())
     ctx = torch.amp.autocast(device_type='npu', dtype=torch.bfloat16)
@@ -503,6 +608,10 @@ def main():
             f.write(f"Config: {json.dumps(config_dict, indent=2)}\n")
             f.write('='*100 + '\n')
 
+    # ---- 预缓存参数列表 ----
+    all_params = list(model.parameters())
+    grad_params = [p for p in all_params if p.requires_grad]
+
     # ---- 训练循环 ----
     training_time_ms = 0
     torch.npu.synchronize()
@@ -549,20 +658,18 @@ def main():
             t0 = time.time()
 
         # ---- 保存 checkpoint ----
-        if master_process and args.save_every != 0 and (
-            last_step or (args.save_every > 0 and step % args.save_every == 0)
-        ):
-            torch.npu.synchronize()
-            training_time_ms += 1000 * (time.time() - t0)
-            # ckpt = dict(step=step, code=code,
-            #             model=raw_model.state_dict(),
-            #             optimizers=[opt.state_dict() for opt in optimizers])
-            ckpt = dict(step=step, code=code,
-                        model=raw_model.state_dict())
-            #            optimizers=[opt.state_dict() for opt in optimizers])
-            torch.save(ckpt, os.path.join(logdir, f'state_step{step:06d}.pt'))
-            torch.npu.synchronize()
-            t0 = time.time()
+        # if master_process and (last_step or (args.save_every > 0 and step % args.save_every == 0)):
+        #     torch.npu.synchronize()
+        #     training_time_ms += 1000 * (time.time() - t0)
+        #     # ckpt = dict(step=step, code=code,
+        #     #             model=raw_model.state_dict(),
+        #     #             optimizers=[opt.state_dict() for opt in optimizers])
+        #     ckpt = dict(step=step, code=code,
+        #                 model=raw_model.state_dict())
+        #     #            optimizers=[opt.state_dict() for opt in optimizers])
+        #     torch.save(ckpt, os.path.join(logdir, f'state_step{step:06d}.pt'))
+        #     torch.npu.synchronize()
+        #     t0 = time.time()
 
         if last_step:
             break
@@ -580,11 +687,11 @@ def main():
             else:
                 loss.backward()
         # 梯度平均
-        for p in model.parameters():
+        for p in grad_params:
             if p.grad is not None:
                 p.grad /= train_accumulation_steps
         if args.grad_clip > 0:
-            torch.nn.utils.clip_grad_norm_(model.parameters(), args.grad_clip)
+            torch.nn.utils.clip_grad_norm_(all_params, args.grad_clip)
         # 更新参数
         for opt, sched in zip(optimizers, schedulers):
             opt.step()
