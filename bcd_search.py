@@ -103,6 +103,9 @@ def start_or_join_control_session(output_dir, launcher, is_metadata_writer, dry_
         }
         write_json_atomic(session_path, session)
     else:
+        # worker 等待 master 写入本次 job 的 session。
+        # 只接受在 worker 自身启动后才创建的 session（created_at_unix >= started_at），
+        # 避免误接受上一次失败 job 遗留的旧 session。
         deadline = time.time() + timeout
         session = None
         while time.time() < deadline:
@@ -110,7 +113,7 @@ def start_or_join_control_session(output_dir, launcher, is_metadata_writer, dry_
                 candidate = wait_for_json(session_path, timeout=interval, interval=interval)
             except TimeoutError:
                 continue
-            if candidate.get('created_at_unix', 0) >= started_at - 600:
+            if candidate.get('created_at_unix', 0) >= started_at - 300:
                 session = candidate
                 break
             time.sleep(interval)

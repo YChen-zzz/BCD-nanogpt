@@ -540,8 +540,8 @@ def main():
         warmup_iters = args.warmup_iters
         args.warmup_fraction = warmup_iters / args.num_iterations if args.num_iterations > 0 else 0.0
 
-    # warmdown_iters = wsd_fraction * 总步数
-    warmdown_iters = int(args.wsd_fraction * args.num_iterations)
+    # warmdown_iters = wsd_fraction * (总步数 - warmup步数)，确保 warmdown 不与 warmup 重叠
+    warmdown_iters = int(args.wsd_fraction * (args.num_iterations - warmup_iters))
     assert args.val_tokens % (B * T * ddp_world_size) == 0
     val_steps = args.val_tokens // (B * T * ddp_world_size)
 
@@ -571,7 +571,8 @@ def main():
         assert it <= args.num_iterations
         if warmup_iters > 0 and it < warmup_iters:
             return (it + 1) / warmup_iters
-        elif it < args.num_iterations - warmdown_iters:
+        warmdown_start = args.num_iterations - warmdown_iters
+        if it < warmdown_start:
             return 1.0
         elif warmdown_iters > 0:
             return (args.num_iterations - it) / warmdown_iters
