@@ -17,17 +17,26 @@ import torch
 
 HYPERPARAMS = {
     # Muon 自身超参数 (作用于 transformer.h)
-    'lr': {
-        'type': float, 'default': 0.001,
-        'help': 'adamw 学习率 (transformer.h)',
+    'muon_lr': {
+        'type': float, 'default': 0.00036,
+        'help': 'Muon 学习率 (transformer.h)',
     },
     'muon_momentum': {
         'type': float, 'default': 0.95,
         'help': 'Muon 动量系数',
     },
+    'muon_weight_decay': {
+        'type': float, 'default': 0.1,
+        'help': 'Muon weight decay',
+    },
     'muon_eps': {
         'type': float, 'default': 1e-7,
         'help': 'Muon Newton-Schulz normalization epsilon',
+    },
+    # 附带的 AdamW 超参数 (作用于 wte + lm_head)
+    'adamw_lr': {
+        'type': float, 'default': 0.0036,
+        'help': 'Embedding/lm_head 的 AdamW 学习率',
     },
     'adamw_beta1': {
         'type': float, 'default': 0.9,
@@ -41,13 +50,9 @@ HYPERPARAMS = {
         'type': float, 'default': 1e-8,
         'help': 'Embedding AdamW epsilon',
     },
-    'weight_decay': {
-        'type': float, 'default': 0.1,
-        'help': 'Embedding AdamW and muon weight decay',
-    },
-    'muon_lr_adjust': {
-        'type': str, 'default': "kimi",
-        'help': 'use which lr adjust in muon',
+    'adamw_weight_decay': {
+        'type': float, 'default': 0.0,
+        'help': 'Embedding AdamW weight decay',
     },
 }
 
@@ -101,23 +106,13 @@ class Muon(torch.optim.Optimizer):
         nesterov: 是否使用 Nesterov 动量
         backend: 正交化方法 ('newtonschulz5' 推荐)
         backend_steps: 迭代步数
-        muon_lr_adjust: lr 缩放策略 ('kimi' | '10_mup' | '10_keller_jordan')
     """
 
-    _LR_ADJUST_FNS = {
-        "kimi":             lambda s0, s1: 0.2 * max(s0, s1) ** 0.5,
-        "10_mup":           lambda s0, s1: 10  * (s0 / s1)   ** 0.5,
-        "10_keller_jordan": lambda s0, s1: 10  * max(1, s0 / s1) ** 0.5,
-    }
-
     def __init__(self, params, lr=3e-4, wd=0.1, momentum=0.95, nesterov=True,
-                 backend='newtonschulz5', backend_steps=5, eps=1e-7, muon_lr_adjust="kimi"):
-        if muon_lr_adjust not in self._LR_ADJUST_FNS:
-            raise ValueError(f"muon_lr_adjust 不支持 '{muon_lr_adjust}'，可选: {list(self._LR_ADJUST_FNS)}")
+                 backend='newtonschulz5', backend_steps=5, eps=1e-7):
         defaults = dict(lr=lr, wd=wd, momentum=momentum, nesterov=nesterov,
                         backend=backend, backend_steps=backend_steps, eps=eps)
         super().__init__(params, defaults)
-        self._lr_adjust_fn = self._LR_ADJUST_FNS[muon_lr_adjust]
 
     def step(self):
         for group in self.param_groups:
@@ -141,8 +136,7 @@ class Muon(torch.optim.Optimizer):
                     g = buf
 
                 g = zeropower_backend(g, steps=group['backend_steps'], eps=group['eps'])
-                g *= self._lr_adjust_fn(g.size(0), g.size(1))
-
+                g *= 0.2 * max(g.size(0), g.size(1))**0.5
                 p.data.mul_(1 - lr * wd)
                 p.data.add_(g, alpha=-lr)
 
@@ -172,23 +166,22 @@ def configure(raw_model, args, rank=0, world_size=1):
     # Embedding/lm_head 以及非 2D 参数使用 AdamW
     embed_optimizer = torch.optim.AdamW(
         adamw_params,
-        lr=args.lr,
+        lr=args.adamw_lr,
         betas=(args.adamw_beta1, args.adamw_beta2),
         eps=args.adamw_eps,
-        weight_decay=args.weight_decay,
+        weight_decay=args.adamw_weight_decay,
     )
 
     # Transformer blocks 使用 Muon
     muon_optimizer = Muon(
         muon_params,
-        lr=args.lr,
-        wd=args.weight_decay,
+        lr=args.muon_lr,
+        wd=args.muon_weight_decay,
         eps=args.muon_eps,
         momentum=args.muon_momentum,
         nesterov=True,
         backend='newtonschulz5',
         backend_steps=5,
-        muon_lr_adjust=args.muon_lr_adjust,
     )
 
     return [embed_optimizer, muon_optimizer]

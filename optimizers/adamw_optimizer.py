@@ -57,5 +57,6 @@ def configure(raw_model, args, rank=0, world_size=1):
         betas=(args.beta1, args.beta2),
         eps=args.eps,
         weight_decay=args.weight_decay,
+        fused=True,
     )
     return [optimizer]

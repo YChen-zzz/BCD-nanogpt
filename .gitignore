@@ -1,6 +1,9 @@
 # Large data files
 data/fineweb10B/
 
+# Training outputs (large, not for version control)
+pretraining_record/
+
 # Byte-compiled
 __pycache__/
 *.py[cod]

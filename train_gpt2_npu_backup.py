@@ -8,8 +8,8 @@ NanoGPT 预训练脚本 (GPU 版本)
 - activation 使用 bf16, 权重/optimizer state/梯度 使用 fp32
 
 用法:
-    torchrun --standalone --nproc_per_node=8 train_gpt2.py --optimizer muon [超参数...]
-    torchrun --standalone --nproc_per_node=8 train_gpt2.py --optimizer adamw --lr 1e-3
+    torchrun --standalone --nproc_per_node=16 train_gpt2.py --optimizer muon [超参数...]
+    torchrun --standalone --nproc_per_node=16 train_gpt2.py --optimizer adamw --lr 1e-3
 """
 
 import os
@@ -25,6 +25,7 @@ from dataclasses import dataclass, asdict
 
 import numpy as np
 import torch
+import torch_npu
 from torch import nn
 import torch.nn.functional as F
 import torch.distributed as dist
@@ -40,10 +41,10 @@ from optimizers import load_optimizer_module
 def set_seed(seed):
     """固定所有随机种子，确保训练可复现"""
     torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
+    torch.npu.manual_seed_all(seed)
     np.random.seed(seed)
     torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.benchmark = False
 
 
 # =============================================================================
@@ -284,7 +285,7 @@ class DistributedDataLoader:
         self.current_position += B * T * self.num_processes
         if self.current_position + (B * T * self.num_processes + 1) > len(self.tokens):
             self.advance()
-        return x.cuda(), y.cuda()
+        return x.npu(), y.npu()
 
 
 # =============================================================================
@@ -310,9 +311,9 @@ def parse_args():
                         help='优化器名称 (muon, adamw, ...)')
 
     # --- 数据相关 ---
-    parser.add_argument('--input_bin', type=str, default='/data/250010186/fineweb100B/cached_fineweb100B/fineweb_train_*.bin',
+    parser.add_argument('--input_bin', type=str, default='/models/share/chenyupeng/chenyupeng/nanogpt_shipei/cached_fineweb100B/fineweb_train_*.bin',
                         help='训练数据路径 (glob 模式)')
-    parser.add_argument('--input_val_bin', type=str, default='/data/250010186/fineweb100B/cached_fineweb100B/fineweb_val_*.bin',
+    parser.add_argument('--input_val_bin', type=str, default='/models/share/chenyupeng/chenyupeng/nanogpt_shipei/cached_fineweb100B/fineweb_val_*.bin',
                         help='验证数据路径 (glob 模式)')
 
     # --- 训练规模 ---
@@ -326,16 +327,16 @@ def parse_args():
                         help='Chinchilla 倍数 (>0 时自动计算 num_iterations)')
     parser.add_argument('--num_iterations', type=int, default=4704,
                         help='训练步数 (chinchilla_multiplier>0 时自动覆盖)')
-    parser.add_argument('--grad_clip', type=float, default=1.0,
+    parser.add_argument('--grad_clip', type=float, default=0.0,
                         help='梯度 norm clip 阈值 (<=0 表示不裁剪)')
 
     # --- LR Scheduler ---
-    parser.add_argument('--warmup_fraction', type=float, default=0.05,
+    parser.add_argument('--warmup_fraction', type=float, default=0.0,
                         help='学习率 warmup 阶段占总步数的比例 '
                              '(warmup_iters = warmup_fraction * num_iterations)')
     parser.add_argument('--warmup_iters', type=int, default=None,
                         help='学习率 warmup 步数 (兼容旧参数；指定后覆盖 warmup_fraction)')
-    parser.add_argument('--wsd_fraction', type=float, default=0.2,
+    parser.add_argument('--wsd_fraction', type=float, default=0.29,
                         help='WSD scheduler 中 decay 阶段占总步数的比例 '
                              '(warmdown_iters = wsd_fraction * num_iterations)')
 
@@ -378,14 +379,13 @@ def main():
     args = parse_args()
 
     # ---- 初始化分布式环境 ----
-    assert torch.cuda.is_available(), "需要 GPU 环境"
-    torch.set_float32_matmul_precision("high")
-    dist.init_process_group(backend='nccl')
+    assert torch.npu.is_available(), "需要 GPU 环境"
+    dist.init_process_group(backend='hccl')
     ddp_rank = int(os.environ['RANK'])
     ddp_local_rank = int(os.environ['LOCAL_RANK'])
     ddp_world_size = int(os.environ['WORLD_SIZE'])
-    device = f'cuda:{ddp_local_rank}'
-    torch.cuda.set_device(device)
+    device = f'npu:{ddp_local_rank}'
+    torch.npu.set_device(device)
     master_process = (ddp_rank == 0)
     if master_process:
         print(f"使用设备: {device}, 总进程数: {ddp_world_size}")
@@ -396,12 +396,11 @@ def main():
     # ---- 初始化模型 ----
     model_config = MODEL_CONFIGS[args.model]
     model = GPT(model_config)
-    model = model.cuda()
-    model = torch.compile(model)
+    model = model.npu()
     model = DDP(model, device_ids=[ddp_local_rank])
     raw_model = model.module
     total_params = sum(p.numel() for p in raw_model.parameters())
-    ctx = torch.amp.autocast(device_type='cuda', dtype=torch.bfloat16)
+    ctx = torch.amp.autocast(device_type='npu', dtype=torch.bfloat16)
 
     if master_process:
         print(f"模型: {args.model}, 参数量: {total_params/1e6:.2f}M")
@@ -436,8 +435,8 @@ def main():
         warmup_iters = args.warmup_iters
         args.warmup_fraction = warmup_iters / args.num_iterations if args.num_iterations > 0 else 0.0
 
-    # warmdown_iters = wsd_fraction * (总步数 - warmup步数)，确保 warmdown 不与 warmup 重叠
-    warmdown_iters = int(args.wsd_fraction * (args.num_iterations - warmup_iters))
+    # warmdown_iters = wsd_fraction * 总步数
+    warmdown_iters = int(args.wsd_fraction * args.num_iterations)
     assert args.val_tokens % (B * T * ddp_world_size) == 0
     val_steps = args.val_tokens // (B * T * ddp_world_size)
 
@@ -463,13 +462,11 @@ def main():
     optimizers = opt_module.configure(raw_model, args, rank=ddp_rank, world_size=ddp_world_size)
 
     # ---- LR Scheduler: 线性 warmup + 恒定 + 线性 warmdown ----
-    # ---- LR Scheduler: 线性 warmup + 恒定 + 线性 warmdown ----
     def get_lr(it):
         assert it <= args.num_iterations
         if warmup_iters > 0 and it < warmup_iters:
             return (it + 1) / warmup_iters
-        warmdown_start = args.num_iterations - warmdown_iters
-        if it < warmdown_start:
+        elif it < args.num_iterations - warmdown_iters:
             return 1.0
         elif warmdown_iters > 0:
             return (args.num_iterations - it) / warmdown_iters
@@ -508,7 +505,7 @@ def main():
 
     # ---- 训练循环 ----
     training_time_ms = 0
-    torch.cuda.synchronize()
+    torch.npu.synchronize()
     t0 = time.time()
     train_loader.reset()
 
@@ -522,7 +519,7 @@ def main():
 
         # ---- 验证集评估 ----
         if last_step or (args.val_loss_every > 0 and step % args.val_loss_every == 0):
-            torch.cuda.synchronize()
+            torch.npu.synchronize()
             training_time_ms += 1000 * (time.time() - t0)
             model.eval()
             val_loader.reset()
@@ -548,14 +545,14 @@ def main():
                 print(msg)
                 with open(logfile, "a") as f:
                     f.write(msg + '\n')
-            torch.cuda.synchronize()
+            torch.npu.synchronize()
             t0 = time.time()
 
         # ---- 保存 checkpoint ----
         if master_process and args.save_every != 0 and (
             last_step or (args.save_every > 0 and step % args.save_every == 0)
         ):
-            torch.cuda.synchronize()
+            torch.npu.synchronize()
             training_time_ms += 1000 * (time.time() - t0)
             # ckpt = dict(step=step, code=code,
             #             model=raw_model.state_dict(),
@@ -564,7 +561,7 @@ def main():
                         model=raw_model.state_dict())
             #            optimizers=[opt.state_dict() for opt in optimizers])
             torch.save(ckpt, os.path.join(logdir, f'state_step{step:06d}.pt'))
-            torch.cuda.synchronize()
+            torch.npu.synchronize()
             t0 = time.time()
 
         if last_step:
@@ -612,7 +609,7 @@ def main():
 
     # ---- 训练结束，保存结果 JSON ----
     if master_process:
-        print(f"峰值显存: {torch.cuda.max_memory_allocated() // 1024 // 1024} MiB")
+        print(f"峰值显存: {torch.npu.max_memory_allocated() // 1024 // 1024} MiB")
         result = {
             'run_id': run_id,
             'final_val_loss': val_loss.item(),

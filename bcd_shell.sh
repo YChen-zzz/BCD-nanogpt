@@ -1,15 +1,15 @@
 
-source /root/miniconda3/etc/profile.d/conda.sh
+# source /root/miniconda3/etc/profile.d/conda.sh
 
-conda env list 
-
-
-conda activate llm_test
+# conda env list 
 
 
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
+# conda activate llm_test
 
 
-cd /models/share/chenyupeng/chenyupeng/nanogpt_optimizer_and_where_to_find_them/modded-nanogpt_record4_muon_improvements
+# source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
-python bcd_search.py --config configs/search_adamw.yaml
+
+cd /data/250010186/Pretraining_code/BCD-nanogpt/BCD-nanogpt
+
+python bcd_search.py --config /data/250010186/Pretraining_code/BCD-nanogpt/BCD-nanogpt/configs/adamw/1c_130m/search_adamw.yaml

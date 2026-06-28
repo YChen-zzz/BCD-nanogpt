@@ -204,7 +204,7 @@ def build_python_args(all_args):
     return py_args
 
 
-def build_train_command(base_args, hyperparams, output_dir, nproc=8, launcher='single'):
+def build_train_command(base_args, hyperparams, output_dir, nproc=16, launcher='single'):
     """
     构建训练命令
     base_args: 固定参数 (optimizer, model, seed, ...)
@@ -212,6 +212,7 @@ def build_train_command(base_args, hyperparams, output_dir, nproc=8, launcher='s
     output_dir: 该 run 的输出目录
     launcher:
       - single: 单机 torchrun --standalone --nproc_per_node=nproc
+      - multi:  多机 torchrun，依赖 /models/share/init_env.sh 提供的环境变量
     """
     repo_dir = str(Path(__file__).resolve().parent)
     all_args = {**base_args, **hyperparams, 'output_dir': output_dir}
@@ -223,12 +224,15 @@ def build_train_command(base_args, hyperparams, output_dir, nproc=8, launcher='s
         )
         script = "\n".join([
             f"cd {shlex.quote(repo_dir)}",
+            "source /root/miniconda3/etc/profile.d/conda.sh",
+            "conda activate llm_test",
+            "source /usr/local/Ascend/ascend-toolkit/set_env.sh",
             torchrun_cmd,
         ])
     elif launcher == 'multi':
         torchrun_cmd = (
             "torchrun "
-            "--nproc_per_node ${GPUS_PER_NODE} "
+            "--nproc_per_node ${NPUS_PER_NODE} "
             "--nnodes ${TOTAL_NODES} "
             "--node_rank ${CURRENT_NODE_RANK} "
             "--master_addr ${MASTER_IP} "
@@ -237,6 +241,11 @@ def build_train_command(base_args, hyperparams, output_dir, nproc=8, launcher='s
         )
         script = "\n".join([
             f"cd {shlex.quote(repo_dir)}",
+            "source /root/miniconda3/etc/profile.d/conda.sh",
+            "conda activate llm_test",
+            "source /models/share/init_env.sh",
+            "source /usr/local/Ascend/ascend-toolkit/set_env.sh",
+            "source /usr/local/Ascend/nnal/atb/set_env.sh",
             torchrun_cmd,
         ])
     else:
@@ -318,7 +327,7 @@ def bcd_search(config, dry_run=False):
     bcd_order = config['bcd_order']           # 搜索顺序
     max_rounds = config.get('max_rounds', 3)
     convergence_threshold = config.get('convergence_threshold', 3e-3)
-    nproc = config.get('nproc', 8)
+    nproc = config.get('nproc', 16)
     launcher = config.get('launcher', 'single')
     is_metadata_writer, current_node_rank = get_metadata_writer(config, launcher)
     should_write_metadata = is_metadata_writer and not dry_run
